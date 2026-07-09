@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advance Salary Request</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#12201d;
+    --paper:#fbf8f2;
+    --paper-dim:#f1ece0;
+    --teal:#1f4c4a;
+    --teal-deep:#0d2b29;
+    --brass:#c89b3c;
+    --brass-dim:#a67d2c;
+    --line:#d8d2c0;
+    --ok:#4c8b6b;
+    --err:#b1503f;
+    --muted:#6b7a72;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(200,155,60,0.10), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(200,155,60,0.06), transparent 40%),
+      var(--teal-deep);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 16px 64px;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:28px;flex-wrap:wrap;gap:12px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--brass);margin:0 0 6px;
+  }
+  h1.brand{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,40px);
+    color:var(--paper);
+    margin:0;
+    line-height:1.05;
+  }
+  .brand small{
+    display:block;font-family:'Inter',sans-serif;font-weight:500;
+    font-size:14px;color:rgba(251,248,242,0.6);margin-top:6px;letter-spacing:0.01em;
+  }
+
+  .settings-toggle{
+    background:transparent;border:1px solid rgba(251,248,242,0.25);
+    color:rgba(251,248,242,0.75);font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.06em;padding:8px 14px;border-radius:20px;
+    cursor:pointer;transition:.15s;
+  }
+  .settings-toggle:hover{border-color:var(--brass);color:var(--brass);}
+
+  .settings-panel{
+    display:none;background:rgba(251,248,242,0.06);border:1px solid rgba(251,248,242,0.15);
+    border-radius:12px;padding:16px 18px;margin-bottom:24px;
+  }
+  .settings-panel.open{display:block;}
+  .settings-panel label{
+    display:block;color:rgba(251,248,242,0.7);font-size:12px;
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.05em;margin-bottom:6px;
+  }
+  .settings-panel input{
+    width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(251,248,242,0.2);
+    background:rgba(0,0,0,0.2);color:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:13px;
+  }
+  .settings-panel p{color:rgba(251,248,242,0.45);font-size:12px;margin:10px 0 0;line-height:1.5;}
+  .settings-panel a{color:var(--brass);}
+
+  .grid{
+    display:grid;grid-template-columns:1.15fr 0.85fr;gap:28px;align-items:start;
+  }
+  @media (max-width:840px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--paper);
+    border-radius:16px;
+    padding:32px;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,0.55);
+  }
+
+  .field-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--teal);margin:0 0 8px;display:block;
+  }
+  .field{margin-bottom:20px;}
+  .field input, .field select{
+    width:100%;padding:13px 14px;border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-family:'Inter',sans-serif;font-size:15px;color:var(--ink);
+    transition:.15s;
+  }
+  .field input:focus, .field select:focus{
+    outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(200,155,60,0.18);
+  }
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:520px){ .two-col{grid-template-columns:1fr;} }
+
+  .amount-wrap{position:relative;}
+  .amount-wrap .rupee{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    color:var(--brass-dim);font-family:'IBM Plex Mono',monospace;font-weight:600;
+  }
+  .amount-wrap input{padding-left:30px;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
+  button.submit{
+    width:100%;padding:16px;border:none;border-radius:9px;
+    background:var(--teal);color:var(--paper);
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;
+    cursor:pointer;transition:.15s;margin-top:6px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  button.submit:hover{background:var(--teal-deep);}
+  button.submit:disabled{opacity:.55;cursor:wait;}
+
+  .status-msg{
+    margin-top:14px;padding:12px 14px;border-radius:8px;font-size:13.5px;
+    font-family:'Inter',sans-serif;line-height:1.5;display:none;
+  }
+  .status-msg.show{display:block;}
+  .status-msg.ok{background:rgba(76,139,107,0.12);color:var(--ok);border:1px solid rgba(76,139,107,0.3);}
+  .status-msg.err{background:rgba(177,80,63,0.1);color:var(--err);border:1px solid rgba(177,80,63,0.3);}
+
+  /* --- Receipt stub --- */
+  .stub-outer{position:sticky;top:24px;}
+  .stub{
+    background:var(--paper);
+    border-radius:4px;
+    position:relative;
+    padding:0;
+    box-shadow:0 30px 60px -30px rgba(0,0,0,0.55);
+    overflow:hidden;
+  }
+  .stub-top{
+    padding:26px 26px 20px;
+    position:relative;
+  }
+  .stub-top::after{
+    content:"";
+    position:absolute;left:0;right:0;bottom:0;
+    border-bottom:2px dashed var(--line);
+  }
+  .stub-eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 4px;
+  }
+  .stub-title{
+    font-family:'Fraunces',serif;font-weight:700;font-size:20px;color:var(--teal);margin:0;
+  }
+  .stub-watermark{
+    position:absolute;right:18px;top:18px;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;
+    color:var(--brass);border:1.5px solid var(--brass);border-radius:20px;
+    padding:4px 10px;transform:rotate(4deg);opacity:.8;
+  }
+  .stub-body{padding:22px 26px;}
+  .stub-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-bottom:1px dotted var(--line);
+    font-size:14px;
+  }
+  .stub-row:last-child{border-bottom:none;}
+  .stub-row .k{color:var(--muted);font-family:'Inter',sans-serif;}
+  .stub-row .v{
+    font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);text-align:right;
+  }
+  .stub-row.total .v{color:var(--brass-dim);font-size:17px;}
+  .stub-perf{
+    display:flex;justify-content:space-between;padding:0 8px;position:relative;top:-11px;
+  }
+  .stub-perf i{
+    width:16px;height:16px;border-radius:50%;background:var(--teal-deep);display:block;
+  }
+  .stub-foot{
+    padding:0 26px 22px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
+  }
+  .download-btn{
+    width:100%;margin-top:16px;padding:14px;border-radius:9px;border:1.5px solid var(--brass);
+    background:transparent;color:var(--brass-dim);font-family:'Inter',sans-serif;font-weight:600;
+    font-size:14px;cursor:pointer;transition:.15s;
+  }
+  .download-btn:hover{background:var(--brass);color:var(--paper);}
+  .download-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .download-btn:disabled:hover{background:transparent;color:var(--brass-dim);}
+
+  .footnote{
+    text-align:center;color:rgba(251,248,242,0.35);font-size:12px;margin-top:36px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow">Varghesettante Bag Kada Pvt. Ltd.</p>
+      <h1 class="brand">Adance Salary Request Developed by JEO 
+        <small>Submit a request — it's logged straight to the staff register.</small>
+      </h1>
+    </div>
+    <button class="settings-toggle" id="settingsToggle">⚙ Connection settings</button>
+  </header>
+
+  <div class="settings-panel" id="settingsPanel">
+    <label for="scriptUrl">Google Sheet connection URL (Apps Script Web App)</label>
+    <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/XXXX/exec">
+    <p>Paste the Web App URL from the Google Apps Script deployment here (see the setup guide provided alongside this file). This is saved only for this browser session — you'll need to paste it again if you reload the page, unless you edit the <code>DEFAULT_SCRIPT_URL</code> line near the bottom of this file once, after which it's remembered automatically. <a href="#" id="howToLink">How do I get this URL?</a></p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <form id="advanceForm" autocomplete="off">
+        <div class="field">
+          <label class="field-label" for="employeeCode">Employee Code</label>
+          <input type="text" id="employeeCode" required placeholder="e.g. EMP-014">
+        </div>
+        <div class="field">
+          <label class="field-label" for="employeeName">Employee Name</label>
+          <input type="text" id="employeeName" required placeholder="Full name">
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label class="field-label" for="month">Month</label>
+            <input type="month" id="month" required>
+          </div>
+          <div class="field">
+            <label class="field-label" for="advanceRequested">Advance Requested</label>
+            <div class="amount-wrap">
+              <span class="rupee">₹</span>
+              <input type="number" id="advanceRequested" min="1" step="1" required placeholder="0">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="submit" id="submitBtn">Submit request</button>
+        <div class="status-msg" id="statusMsg"></div>
+      </form>
+    </div>
+
+    <div class="stub-outer">
+      <div class="stub">
+        <div class="stub-top">
+          <p class="stub-eyebrow">Acknowledgement</p>
+          <h2 class="stub-title">Advance Request Chit</h2>
+          <div class="stub-watermark">DRAFT</div>
+        </div>
+        <div class="stub-body">
+          <div class="stub-row"><span class="k">Receipt No.</span><span class="v" id="rReceipt">—</span></div>
+          <div class="stub-row"><span class="k">Employee Name</span><span class="v" id="rName">—</span></div>
+          <div class="stub-row"><span class="k">Employee Code</span><span class="v" id="rCode">—</span></div>
+          <div class="stub-row"><span class="k">Month</span><span class="v" id="rMonth">—</span></div>
+          <div class="stub-row"><span class="k">Advance Requested</span><span class="v" id="rAmount">₹0</span></div>
+          <div class="stub-row total"><span class="k">Total Advance Collected</span><span class="v" id="rTotal">₹0</span></div>
+        </div>
+        <div class="stub-perf">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="stub-foot" id="rDate">Not yet submitted</div>
+      </div>
+      <button class="download-btn" id="downloadBtn" disabled>Download PDF receipt</button>
+    </div>
+  </div>
+
+  <p class="footnote">Every submission is written to the "Requests" tab of the connected Google Sheet.</p>
+</div>
+
+<script>
+  // ---- CONFIGURE ONCE: paste your Apps Script Web App URL below, then this
+  // box is pre-filled every time the page loads. Leave blank to require
+  // pasting it in the settings panel each session instead.
+  const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx_ojqa9Bq2sq0lKD_zM56LMIFYaU0gy85IFN77BDiHaVnJ2XCfiAq4VhHWrCdxANizyQ/exec";
+
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const scriptUrlInput = document.getElementById('scriptUrl');
+  scriptUrlInput.value = DEFAULT_SCRIPT_URL;
+  if(!DEFAULT_SCRIPT_URL){ settingsPanel.classList.add('open'); }
+
+  settingsToggle.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+
+  const form = document.getElementById('advanceForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusMsg = document.getElementById('statusMsg');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  let lastReceipt = null;
+
+  function fmtMoney(n){
+    return '₹' + Number(n).toLocaleString('en-IN');
+  }
+  function fmtMonth(val){
+    if(!val) return '—';
+    const [y,m] = val.split('-');
+    const d = new Date(Number(y), Number(m)-1, 1);
+    return d.toLocaleDateString('en-IN', {month:'long', year:'numeric'});
+  }
+
+  function showStatus(kind, text){
+    statusMsg.textContent = text;
+    statusMsg.className = 'status-msg show ' + kind;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const scriptUrl = scriptUrlInput.value.trim();
+    if(!scriptUrl){
+      settingsPanel.classList.add('open');
+      showStatus('err', 'Please paste the Google Sheet connection URL in "Connection settings" above first.');
+      return;
+    }
+
+    const employeeCode = document.getElementById('employeeCode').value.trim();
+    const employeeName = document.getElementById('employeeName').value.trim();
+    const month = document.getElementById('month').value;
+    const advanceRequested = Number(document.getElementById('advanceRequested').value);
+
+    if(!employeeCode || !employeeName || !month || !advanceRequested){
+      showStatus('err', 'Please fill in every field before submitting.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+    statusMsg.className = 'status-msg';
+
+    try {
+      const res = await fetch(scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ employeeCode, employeeName, month, advanceRequested })
+      });
+      const data = await res.json();
+
+      if(!data.success){
+        showStatus('err', data.error || 'The sheet rejected the request. Please check the details and try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit request';
+        return;
+      }
+
+      lastReceipt = {
+        receiptNo: data.receiptNo,
+        timestamp: data.timestamp,
+        employeeCode, employeeName, month,
+        advanceRequested,
+        totalAdvanceCollected: data.totalAdvanceCollected
+      };
+
+      document.getElementById('rReceipt').textContent = data.receiptNo;
+      document.getElementById('rName').textContent = employeeName;
+      document.getElementById('rCode').textContent = employeeCode;
+      document.getElementById('rMonth').textContent = fmtMonth(month);
+      document.getElementById('rAmount').textContent = fmtMoney(advanceRequested);
+      document.getElementById('rTotal').textContent = fmtMoney(data.totalAdvanceCollected);
+      document.getElementById('rDate').textContent = 'Logged ' + new Date(data.timestamp).toLocaleString('en-IN');
+      document.querySelector('.stub-watermark').textContent = 'LOGGED';
+      document.querySelector('.stub-watermark').style.color = 'var(--ok)';
+      document.querySelector('.stub-watermark').style.borderColor = 'var(--ok)';
+
+      downloadBtn.disabled = false;
+      showStatus('ok', 'Request logged to the Google Sheet. Receipt No. ' + data.receiptNo + '. You can now download the PDF receipt.');
+      form.reset();
+    } catch(err){
+      showStatus('err', 'Could not reach the Google Sheet. Check the connection URL and your internet connection, then try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit request';
+    }
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if(!lastReceipt) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a5' });
+
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 50;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(180, 130, 40);
+    doc.text('VARGHESETTANTE BAG KADA PVT. LTD.', pageW/2, y, { align: 'center' });
+
+    y += 22;
+    doc.setFontSize(17);
+    doc.setTextColor(20, 40, 35);
+    doc.text('Advance Salary Acknowledgement Receipt', pageW/2, y, { align: 'center' });
+
+    y += 14;
+    doc.setDrawColor(200, 200, 190);
+    doc.setLineDashPattern([3,2], 0);
+    doc.line(36, y, pageW-36, y);
+    doc.setLineDashPattern([], 0);
+
+    const rows = [
+      ['Receipt No.', lastReceipt.receiptNo],
+      ['Date', new Date(lastReceipt.timestamp).toLocaleString('en-IN')],
+      ['Employee Name', lastReceipt.employeeName],
+      ['Employee Code', lastReceipt.employeeCode],
+      ['Month', fmtMonth(lastReceipt.month)],
+      ['Advance Requested', fmtMoney(lastReceipt.advanceRequested)],
+      ['Total Advance Collected', fmtMoney(lastReceipt.totalAdvanceCollected)]
+    ];
+
+    y += 34;
+    doc.setFontSize(11);
+    rows.forEach(([k,v], i) => {
+      doc.setTextColor(107, 122, 114);
+      doc.setFont('helvetica', 'normal');
+      doc.text(k, 46, y);
+      doc.setTextColor(18, 32, 29);
+      doc.setFont('helvetica', 'bold');
+      doc.text(String(v), pageW-46, y, { align: 'right' });
+      y += 26;
+      if(i < rows.length-1){
+        doc.setDrawColor(230,230,222);
+        doc.line(46, y-16, pageW-46, y-16);
+      }
+    });
+
+    y += 20;
+    doc.setDrawColor(200, 200, 190);
+    doc.setLineDashPattern([3,2], 0);
+    doc.line(36, y, pageW-36, y);
+    doc.setLineDashPattern([], 0);
+
+    y += 26;
+    doc.setFontSize(9);
+    doc.setTextColor(140,140,132);
+    doc.setFont('helvetica', 'normal');
+    doc.text('This is a system-generated acknowledgement of the advance salary request submitted above.', pageW/2, y, { align: 'center', maxWidth: pageW-72 });
+    y += 14;
+    doc.text('It confirms the request has been recorded and does not itself constitute payment.', pageW/2, y, { align: 'center', maxWidth: pageW-72 });
+
+    doc.save(lastReceipt.receiptNo + '_' + lastReceipt.employeeCode + '.pdf');
+  });
+</script>
+</body>
+</html>
